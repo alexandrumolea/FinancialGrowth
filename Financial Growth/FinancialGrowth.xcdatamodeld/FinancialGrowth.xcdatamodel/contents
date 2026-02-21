@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21754" systemVersion="24B91" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="Activity" representedClassName="Activity" syncable="YES" codeGenerationType="class">
+        <attribute name="activityType" attributeType="String" defaultValueString="Coaching"/>
+        <attribute name="costPerHour" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="hours" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="startDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="totalAmount" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="isInvoiced" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="client" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Client" inverseName="activities" inverseEntity="Client"/>
+    </entity>
+    <entity name="Client" representedClassName="Client" syncable="YES" codeGenerationType="class">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="email" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String" defaultValueString=""/>
+        <attribute name="phone" optional="YES" attributeType="String"/>
+        <relationship name="activities" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Activity" inverseName="client" inverseEntity="Activity"/>
+    </entity>
+</model>
