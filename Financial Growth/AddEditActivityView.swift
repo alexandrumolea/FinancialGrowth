@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import EventKit
 
 struct AddEditActivityView: View {
 
@@ -26,6 +27,9 @@ struct AddEditActivityView: View {
     @State private var notes = ""
     @State private var isInvoiced = false
     @State private var showingAddClient = false
+    
+    // Calendar integration
+    @State private var eventToEdit: EventWrapper?
 
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Client.name, ascending: true)],
@@ -130,6 +134,20 @@ struct AddEditActivityView: View {
                     Toggle("Facturat", isOn: $isInvoiced)
                         .tint(.green)
                 }
+
+                Section {
+                    Button {
+                        Task {
+                            await prepareCalendarEvent()
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "calendar.badge.plus")
+                            Text("Creează eveniment în Calendar")
+                        }
+                    }
+                    .foregroundStyle(.blue)
+                }
             }
             .navigationTitle(isEditing ? "Editare activitate" : "Activitate nouă")
             .navigationBarTitleDisplayMode(.inline)
@@ -148,8 +166,21 @@ struct AddEditActivityView: View {
             .sheet(isPresented: $showingAddClient) {
                 AddEditClientView()
             }
+            .sheet(item: $eventToEdit) { wrapper in
+                EKEventEditView(event: wrapper.event)
+            }
             .onAppear(perform: loadExistingActivity)
     }
+    }
+
+    private func prepareCalendarEvent() async {
+        let granted = await CalendarService.shared.requestAccess()
+        guard granted else { return }
+        
+        let title = "\(selectedType.displayName) Session"
+        let event = CalendarService.shared.createPlaceholderEvent(title: title, date: startDate)
+        
+        eventToEdit = EventWrapper(event: event)
     }
 
     // MARK: - Load existing

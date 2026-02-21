@@ -23,6 +23,7 @@
 		A002000000000025 /* ReportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A002000000000026 /* ReportsView.swift */; };
 		A002000000000027 /* ReportCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A002000000000028 /* ReportCardView.swift */; };
 		A002000000000038 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A002000000000037 /* CalendarView.swift */; };
+		A002000000000040 /* CalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A002000000000039 /* CalendarService.swift */; };
 		A002000000000029 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A002000000000030 /* Assets.xcassets */; };
 		A002000000000032 /* PDFReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A002000000000031 /* PDFReportView.swift */; };
 		A002000000000034 /* ClientDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A002000000000033 /* ClientDetailView.swift */; };
@@ -46,6 +47,7 @@
 		A002000000000026 /* ReportsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportsView.swift; sourceTree = "<group>"; };
 		A002000000000028 /* ReportCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportCardView.swift; sourceTree = "<group>"; };
 		A002000000000037 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
+		A002000000000039 /* CalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarService.swift; sourceTree = "<group>"; };
 		A002000000000030 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A002000000000031 /* PDFReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFReportView.swift; sourceTree = "<group>"; };
 		A002000000000033 /* ClientDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientDetailView.swift; sourceTree = "<group>"; };
@@ -102,6 +104,7 @@
 				A002000000000026 /* ReportsView.swift */,
 				A002000000000028 /* ReportCardView.swift */,
 				A002000000000037 /* CalendarView.swift */,
+				A002000000000039 /* CalendarService.swift */,
 				A002000000000031 /* PDFReportView.swift */,
 				A002000000000033 /* ClientDetailView.swift */,
 				A002000000000035 /* ReportExportHelper.swift */,
@@ -198,6 +201,7 @@
 				A002000000000025 /* ReportsView.swift in Sources */,
 				A002000000000027 /* ReportCardView.swift in Sources */,
 				A002000000000038 /* CalendarView.swift in Sources */,
+				A002000000000040 /* CalendarService.swift in Sources */,
 				A002000000000032 /* PDFReportView.swift in Sources */,
 				A002000000000034 /* ClientDetailView.swift in Sources */,
 				A002000000000036 /* ReportExportHelper.swift in Sources */,

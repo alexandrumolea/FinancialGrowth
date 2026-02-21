@@ -78,6 +78,17 @@ extension Date {
         formatter.timeStyle = .none
         return formatter.string(from: self)
     }
+
+    var roundedToNextHour: Date {
+        let calendar = Calendar.current
+        var components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: self)
+        if let minute = components.minute, minute > 0 {
+            components.hour = (components.hour ?? 0) + 1
+        }
+        components.minute = 0
+        components.second = 0
+        return calendar.date(from: components) ?? self
+    }
 }
 
 // MARK: - ActivityType Color

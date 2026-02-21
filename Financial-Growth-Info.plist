@@ -6,5 +6,11 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Avem nevoie de acces la calendar pentru a salva activitățile tale ca evenimente.</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>Avem nevoie de acces pentru a adăuga activitățile în calendarul tău.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Avem nevoie de acces complet la calendar pentru a-ți permite să editezi evenimentele și să adaugi invitați.</string>
 </dict>
 </plist>
