@@ -34,6 +34,7 @@ struct ReportsView: View {
     private var allActivities: FetchedResults<Activity>
 
     @State private var selectedPeriod: ReportPeriod = .month
+    @State private var reportDate = Date()
     @State private var customStart = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
     @State private var customEnd = Date()
     @State private var selectedInvoiceFilter: InvoiceFilter = .all
@@ -107,6 +108,35 @@ struct ReportsView: View {
                     .pickerStyle(.segmented)
                     .padding(.horizontal)
 
+                    // Navigation for Week/Month
+                    if selectedPeriod != .custom {
+                        HStack {
+                            Button(action: { movePeriod(by: -1) }) {
+                                Image(systemName: "chevron.left.circle.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Text(currentPeriodDisplay)
+                                .font(.headline)
+                                .foregroundStyle(.primary)
+                            
+                            Spacer()
+                            
+                            Button(action: { movePeriod(by: 1) }) {
+                                Image(systemName: "chevron.right.circle.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding()
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .padding(.horizontal)
+                    }
+
                     // Custom date range
                     if selectedPeriod == .custom {
                         VStack(spacing: 0) {
@@ -122,15 +152,17 @@ struct ReportsView: View {
                         .padding(.horizontal)
                     }
 
-                    // Period label
-                    let (start, end) = dateRange()
-                    HStack {
-                        Text(periodLabel(start: start, end: end))
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                        Spacer()
+                    // Period label (only for custom ranges)
+                    if selectedPeriod == .custom {
+                        let (start, end) = dateRange()
+                        HStack {
+                            Text(periodLabel(start: start, end: end))
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                        }
+                        .padding(.horizontal)
                     }
-                    .padding(.horizontal)
 
                     // Summary cards - 2 columns
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
@@ -268,12 +300,11 @@ struct ReportsView: View {
 
     // MARK: - Helpers
     private func dateRange() -> (Date, Date) {
-        let now = Date()
         switch selectedPeriod {
         case .week:
-            return (now.startOfWeek, now.endOfWeek)
+            return (reportDate.startOfWeek, reportDate.endOfWeek)
         case .month:
-            return (now.startOfMonth, now.endOfMonth)
+            return (reportDate.startOfMonth, reportDate.endOfMonth)
         case .custom:
             return (customStart.startOfDay, customEnd.endOfDay)
         }
@@ -286,9 +317,30 @@ struct ReportsView: View {
         case .month:
             let formatter = DateFormatter()
             formatter.dateFormat = "MMMM yyyy"
-            return formatter.string(from: Date()).capitalized
+            return formatter.string(from: reportDate).capitalized
         case .custom:
             return "\(start.shortFormatted) – \(end.shortFormatted)"
+        }
+    }
+    
+    private var currentPeriodDisplay: String {
+        switch selectedPeriod {
+        case .week:
+            let (start, end) = dateRange()
+            return "\(start.shortFormatted) - \(end.shortFormatted)"
+        case .month:
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MMMM yyyy"
+            return formatter.string(from: reportDate).capitalized
+        case .custom:
+            return "Personalizat"
+        }
+    }
+    
+    private func movePeriod(by amount: Int) {
+        let component: Calendar.Component = selectedPeriod == .week ? .weekOfYear : .month
+        if let newDate = Calendar.current.date(byAdding: component, value: amount, to: reportDate) {
+            reportDate = newDate
         }
     }
     
