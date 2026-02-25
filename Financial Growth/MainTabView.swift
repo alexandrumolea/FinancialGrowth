@@ -10,9 +10,9 @@ import SwiftUI
 struct MainTabView: View {
     var body: some View {
         TabView {
-            ActivitiesListView()
+            CalendarView()
                 .tabItem {
-                    Label("Activități", systemImage: "list.bullet.clipboard")
+                    Label("Calendar", systemImage: "calendar")
                 }
 
             ClientsListView()
@@ -20,14 +20,14 @@ struct MainTabView: View {
                     Label("Clienți", systemImage: "person.2")
                 }
 
-            CalendarView()
-                .tabItem {
-                    Label("Calendar", systemImage: "calendar")
-                }
-
             ReportsView()
                 .tabItem {
                     Label("Rapoarte", systemImage: "chart.bar")
+                }
+
+            ActivitiesListView()
+                .tabItem {
+                    Label("Activități", systemImage: "list.bullet.clipboard")
                 }
         }
     }
