@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ClientRowView: View {
 
-    let client: Client
+    @ObservedObject var client: Client
 
     var body: some View {
         HStack(spacing: 12) {

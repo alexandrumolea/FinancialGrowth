@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ActivityRowView: View {
 
-    let activity: Activity
+    @ObservedObject var activity: Activity
 
     private var activityType: ActivityType {
         ActivityType(rawValue: activity.activityType ?? "") ?? .others
