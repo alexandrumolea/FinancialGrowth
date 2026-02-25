@@ -16,6 +16,7 @@ struct AddEditActivityView: View {
 
     // Existing activity to edit (nil = new)
     var activity: Activity?
+    var initialDate: Date? = nil
 
     // MARK: - Form state
     @State private var selectedType: ActivityType = .coaching
@@ -185,15 +186,19 @@ struct AddEditActivityView: View {
 
     // MARK: - Load existing
     private func loadExistingActivity() {
-        guard let act = activity else { return }
-        selectedType = ActivityType(rawValue: act.activityType ?? "") ?? .coaching
-        selectedClient = act.client
-        startDate = act.startDate ?? Date()
-        endDate = act.endDate ?? Date()
-        hoursText = act.hours == 0 ? "" : String(act.hours)
-        costPerHourText = act.costPerHour == 0 ? "" : String(act.costPerHour)
-        notes = act.notes ?? ""
-        isInvoiced = act.isInvoiced != 0
+        if let act = activity {
+            selectedType = ActivityType(rawValue: act.activityType ?? "") ?? .coaching
+            selectedClient = act.client
+            startDate = act.startDate ?? Date()
+            endDate = act.endDate ?? Date()
+            hoursText = act.hours == 0 ? "" : String(act.hours)
+            costPerHourText = act.costPerHour == 0 ? "" : String(act.costPerHour)
+            notes = act.notes ?? ""
+            isInvoiced = act.isInvoiced != 0
+        } else if let initialDate = initialDate {
+            startDate = initialDate
+            endDate = initialDate
+        }
     }
 
     // MARK: - Save

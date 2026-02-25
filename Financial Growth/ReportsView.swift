@@ -294,29 +294,76 @@ struct ReportsView: View {
     
     @MainActor
     private func generatePDFData(label: String) -> Data? {
-        let pdfView = PDFReportView(
-            periodLabel: label,
-            activities: Array(filteredActivities),
-            totalAmount: totalAmount,
-            totalHours: totalHours
-        )
+        let activitiesArray = Array(filteredActivities)
         
-        let renderer = ImageRenderer(content: pdfView)
-        renderer.scale = 3.0
+        // Items per page: Less on the first page because of the summary header
+        let itemsOnFirstPage = 12
+        let itemsOnOtherPages = 18
+        
+        var chunks: [[Activity]] = []
+        if !activitiesArray.isEmpty {
+            let firstChunk = Array(activitiesArray.prefix(itemsOnFirstPage))
+            chunks.append(firstChunk)
+            
+            if activitiesArray.count > itemsOnFirstPage {
+                let remaining = Array(activitiesArray.dropFirst(itemsOnFirstPage))
+                chunks.append(contentsOf: remaining.chunked(into: itemsOnOtherPages))
+            }
+        }
+        
+        let totalPages = max(1, chunks.count)
         
         // Generate a temporary file URL
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).pdf")
         
         var generatedData: Data?
+        let firstPDFView = PDFReportView(
+            periodLabel: label,
+            activities: chunks.first ?? [],
+            totalAmount: totalAmount,
+            totalHours: totalHours,
+            pageNumber: 1,
+            totalPages: totalPages,
+            isFirstPage: true
+        )
+        
+        let renderer = ImageRenderer(content: firstPDFView)
+        renderer.scale = 3.0
+        
         renderer.render { size, context in
             var box = CGRect(origin: .zero, size: size)
             guard let pdfContext = CGContext(url as CFURL, mediaBox: &box, nil) else { return }
             
+            // Render First Page
             pdfContext.beginPDFPage(nil)
             context(pdfContext)
             pdfContext.endPDFPage()
-            pdfContext.closePDF()
             
+            // Render Subsequent Pages
+            if chunks.count > 1 {
+                for i in 1..<chunks.count {
+                    let pageView = PDFReportView(
+                        periodLabel: label,
+                        activities: chunks[i],
+                        totalAmount: totalAmount,
+                        totalHours: totalHours,
+                        pageNumber: i + 1,
+                        totalPages: totalPages,
+                        isFirstPage: false
+                    )
+                    
+                    let pageRenderer = ImageRenderer(content: pageView)
+                    pageRenderer.scale = 3.0
+                    
+                    pageRenderer.render { pageSize, pageContext in
+                        pdfContext.beginPDFPage(nil)
+                        pageContext(pdfContext)
+                        pdfContext.endPDFPage()
+                    }
+                }
+            }
+            
+            pdfContext.closePDF()
             generatedData = try? Data(contentsOf: url)
         }
         

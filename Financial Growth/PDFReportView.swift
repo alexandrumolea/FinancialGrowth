@@ -13,36 +13,57 @@ struct PDFReportView: View {
     let totalAmount: Double
     let totalHours: Double
     
+    // Pagination properties
+    let pageNumber: Int
+    let totalPages: Int
+    let isFirstPage: Bool
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            // Header
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Raport Activitate")
-                        .font(.title)
-                        .fontWeight(.bold)
-                    Text(periodLabel)
-                        .font(.headline)
+            if isFirstPage {
+                // Header
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Raport Activitate")
+                            .font(.title)
+                            .fontWeight(.bold)
+                        Text(periodLabel)
+                            .font(.headline)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chart.bar.doc.horizontal.fill")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.blue)
+                }
+                .padding(.bottom, 10)
+                
+                Divider()
+                
+                // Summary
+                HStack(spacing: 40) {
+                    SummaryItem(title: "Total Încasat", value: totalAmount.currencyString, color: .green)
+                    SummaryItem(title: "Total Ore", value: totalHours.hoursString, color: .orange)
+                    SummaryItem(title: "Sesiuni", value: "\(activities.count)", color: .blue)
+                }
+                .padding(.vertical, 10)
+                
+                Divider()
+            } else {
+                // Secondary Page Header
+                HStack {
+                    Text("Raport Activitate - Continuare (\(periodLabel))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text("Pagina \(pageNumber) din \(totalPages)")
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                Spacer()
-                Image(systemName: "chart.bar.doc.horizontal.fill")
-                    .font(.system(size: 40))
-                    .foregroundStyle(.blue)
+                .padding(.bottom, 5)
+                
+                Divider()
             }
-            .padding(.bottom, 10)
-            
-            Divider()
-            
-            // Summary
-            HStack(spacing: 40) {
-                SummaryItem(title: "Total Încasat", value: totalAmount.currencyString, color: .green)
-                SummaryItem(title: "Total Ore", value: totalHours.hoursString, color: .orange)
-                SummaryItem(title: "Sesiuni", value: "\(activities.count)", color: .blue)
-            }
-            .padding(.vertical, 10)
-            
-            Divider()
             
             // Activities Table Header
             HStack {
@@ -59,7 +80,7 @@ struct PDFReportView: View {
             .foregroundStyle(.secondary)
             .padding(.horizontal, 4)
             
-            // Activities List
+            // Activities List (Paginated)
             VStack(spacing: 0) {
                 ForEach(activities) { activity in
                     ActivityRow(activity: activity)
@@ -71,6 +92,9 @@ struct PDFReportView: View {
             
             // Footer
             HStack {
+                Text("Pagina \(pageNumber) / \(totalPages)")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
                 Spacer()
                 Text("Generat la \(Date().mediumFormatted)")
                     .font(.caption2)

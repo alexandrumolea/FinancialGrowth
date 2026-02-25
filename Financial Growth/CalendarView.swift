@@ -17,120 +17,174 @@ struct CalendarView: View {
     )
     private var allActivities: FetchedResults<Activity>
     
-    @State private var selectedDate = Date()
-    @State private var currentMonth = Date()
+    @State private var selectedDate = Date().startOfDay
+    @State private var currentMonth = Date().startOfMonth
+    @State private var showingAddActivity = false
     
-    private let calendar = Calendar.current
+    private let calendar: Calendar = {
+        var cal = Calendar.current
+        cal.firstWeekday = 2 // Monday (Standard in Romania)
+        return cal
+    }()
     
     private var activitiesForSelectedDate: [Activity] {
         allActivities.filter { activity in
             guard let start = activity.startDate, let end = activity.endDate else { return false }
             let startOfDay = calendar.startOfDay(for: start)
-            let endOfDay = calendar.startOfDay(for: max(start, end)) // Use max for robustness
+            let endOfDay = calendar.startOfDay(for: max(start, end))
             let checkDate = calendar.startOfDay(for: selectedDate)
             return checkDate >= startOfDay && checkDate <= endOfDay
         }
     }
     
+    private let weekdayHeaders = ["L", "M", "M", "J", "V", "S", "D"]
+    
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // Calendar Header
-                HStack {
-                    Text(currentMonth.monthYearString)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    
-                    Spacer()
-                    
-                    HStack(spacing: 20) {
-                        Button(action: { changeMonth(by: -1) }) {
-                            Image(systemName: "chevron.left")
-                                .fontWeight(.semibold)
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Month Navigation & Title
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(currentMonth.monthYearString)
+                                .font(.title2.bold())
                         }
                         
-                        Button(action: { changeMonth(by: 1) }) {
-                            Image(systemName: "chevron.right")
-                                .fontWeight(.semibold)
+                        Spacer()
+                        
+                        HStack(spacing: 12) {
+                            Button(action: { changeMonth(by: -1) }) {
+                                Image(systemName: "chevron.left.circle.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(.secondary)
+                            }
+                            
+                            Button(action: { changeMonth(by: 1) }) {
+                                Image(systemName: "chevron.right.circle.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
-                }
-                .padding()
-                
-                // Days of week
-                HStack {
-                    let days = ["Lu", "Ma", "Mi", "Jo", "Vi", "Sâ", "Du"]
-                    ForEach(days, id: \.self) { day in
-                        Text(day)
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity)
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 8)
-                
-                // Calendar Grid
-                let daysInMonth = daysInCurrentMonth()
-                let firstDayOffset = firstWeekdayOffset()
-                
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 10) {
-                    // Padding for first week
-                    ForEach(0..<firstDayOffset, id: \.self) { _ in
-                        Text("")
-                            .frame(height: 40)
-                    }
-                    
-                    ForEach(1...daysInMonth, id: \.self) { day in
-                        let date = dateForDay(day)
-                        DayView(
-                            day: day,
-                            isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
-                            isToday: calendar.isDateInToday(date),
-                            hasActivities: hasActivities(on: date),
-                            activityColors: colorsForActivities(on: date)
-                        )
-                        .onTapGesture {
-                            selectedDate = date
+                    .padding(.horizontal)
+                    .padding(.top)
+
+                    // Calendar Grid Section
+                    VStack(spacing: 8) {
+                        // Week Headers
+                        HStack(spacing: 0) {
+                            ForEach(weekdayHeaders, id: \.self) { day in
+                                Text(day)
+                                    .font(.caption2.bold())
+                                    .foregroundStyle(.secondary)
+                                    .frame(maxWidth: .infinity)
+                            }
                         }
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.bottom)
-                
-                Divider()
-                
-                // Activities for selected day
-                List {
-                    Section {
-                        if activitiesForSelectedDate.isEmpty {
-                            ContentUnavailableView(
-                                "Nicio activitate",
-                                systemImage: "calendar.badge.exclamationmark",
-                                description: Text("Nu ai nicio sesiune programată pentru această zi.")
-                            )
-                            .listRowBackground(Color.clear)
-                        } else {
-                            ForEach(activitiesForSelectedDate) { activity in
-                                NavigationLink {
-                                    AddEditActivityView(activity: activity)
-                                } label: {
-                                    ActivityRowView(activity: activity)
+                        
+                        let daysInMonth = daysInCurrentMonth()
+                        let firstDayOffset = firstWeekdayOffset()
+                        let totalCells = daysInMonth + firstDayOffset
+                        let rows = Int(ceil(Double(totalCells) / 7.0))
+                        
+                        VStack(spacing: 0) {
+                            ForEach(0..<rows, id: \.self) { row in
+                                HStack(spacing: 0) {
+                                    ForEach(0..<7, id: \.self) { column in
+                                        let index = row * 7 + column
+                                        let dayValue = index - firstDayOffset + 1
+                                        
+                                        if dayValue >= 1 && dayValue <= daysInMonth {
+                                            let date = dateForDay(dayValue)
+                                            DayView(
+                                                day: dayValue,
+                                                isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
+                                                isToday: calendar.isDateInToday(date),
+                                                hasActivities: hasActivities(on: date),
+                                                activityColors: colorsForActivities(on: date)
+                                            )
+                                            .frame(maxWidth: .infinity)
+                                            .onTapGesture {
+                                                selectedDate = date
+                                            }
+                                        } else {
+                                            Color.clear
+                                                .frame(maxWidth: .infinity)
+                                                .frame(height: 50)
+                                        }
+                                    }
                                 }
                             }
                         }
-                    } header: {
-                        Text(selectedDate.mediumFormatted)
-                            .font(.headline)
-                            .foregroundStyle(.primary)
-                            .textCase(nil)
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .padding(.horizontal)
+                    
+                    // Selected Date Activities
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text(selectedDate.mediumFormatted)
+                                .font(.headline)
+                            Spacer()
+                            if !activitiesForSelectedDate.isEmpty {
+                                Text("\(activitiesForSelectedDate.count) sesiuni")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(.horizontal)
+                        
+                        if activitiesForSelectedDate.isEmpty {
+                            VStack(spacing: 12) {
+                                Image(systemName: "calendar.badge.plus")
+                                    .font(.largeTitle)
+                                    .foregroundStyle(.quaternary)
+                                Text("Nicio activitate programată")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 40)
+                            .background(Color(.secondarySystemGroupedBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        } else {
+                            VStack(spacing: 12) {
+                                ForEach(activitiesForSelectedDate) { activity in
+                                    NavigationLink {
+                                        AddEditActivityView(activity: activity)
+                                    } label: {
+                                        ActivityRowView(activity: activity)
+                                            .padding()
+                                            .background(Color(.secondarySystemGroupedBackground))
+                                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 30)
+                }
+            }
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("Calendar")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showingAddActivity = true
+                    } label: {
+                        Image(systemName: "plus")
                     }
                 }
-                .listStyle(.insetGrouped)
             }
-            .navigationTitle("Calendar")
-            .background(Color(.systemGroupedBackground))
+            .sheet(isPresented: $showingAddActivity) {
+                AddEditActivityView(initialDate: selectedDate)
+            }
+            .onAppear {
+                currentMonth = currentMonth.startOfMonth
+            }
         }
     }
     
@@ -141,23 +195,22 @@ struct CalendarView: View {
     }
     
     private func firstWeekdayOffset() -> Int {
-        let components = calendar.dateComponents([.year, .month], from: currentMonth)
-        let firstOfMonth = calendar.date(from: components)!
-        let weekday = calendar.component(.weekday, from: firstOfMonth)
-        // Convert to Monday start (1=Mon, 7=Sun)
-        let offset = (weekday + 5) % 7
-        return offset
+        // weekday returns 1 for Sun, 2 for Mon, ...
+        let weekday = calendar.component(.weekday, from: currentMonth)
+        // With firstWeekday = 2 (Mon):
+        // Mon(2) -> 0, Tue(3) -> 1, ... Sun(1) -> 6
+        return (weekday + 5) % 7
     }
     
     private func dateForDay(_ day: Int) -> Date {
         var components = calendar.dateComponents([.year, .month], from: currentMonth)
         components.day = day
-        return calendar.date(from: components)!
+        return calendar.date(from: components) ?? Date()
     }
     
     private func changeMonth(by amount: Int) {
         if let newMonth = calendar.date(byAdding: .month, value: amount, to: currentMonth) {
-            currentMonth = newMonth
+            currentMonth = newMonth.startOfMonth
         }
     }
     
@@ -166,7 +219,7 @@ struct CalendarView: View {
         return allActivities.contains { activity in
             guard let start = activity.startDate, let end = activity.endDate else { return false }
             let startOfDay = calendar.startOfDay(for: start)
-            let endOfDay = calendar.startOfDay(for: max(start, end)) // Use max for robustness
+            let endOfDay = calendar.startOfDay(for: max(start, end))
             return checkDate >= startOfDay && checkDate <= endOfDay
         }
     }
@@ -176,11 +229,10 @@ struct CalendarView: View {
         let dayActivities = allActivities.filter { activity in
             guard let start = activity.startDate, let end = activity.endDate else { return false }
             let startOfDay = calendar.startOfDay(for: start)
-            let endOfDay = calendar.startOfDay(for: end)
+            let endOfDay = calendar.startOfDay(for: max(start, end))
             return checkDate >= startOfDay && checkDate <= endOfDay
         }
         
-        // Get unique activity type colors
         let types = Set(dayActivities.compactMap { ActivityType(rawValue: $0.activityType ?? "") })
         return types.map { $0.color }
     }
