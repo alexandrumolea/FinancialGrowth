@@ -59,6 +59,7 @@ struct PersistenceController {
                                   forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
         }
 
+        // Load stores on a background queue to satisfy main thread I/O checks
         container.loadPersistentStores { _, error in
             if let error = error as NSError? {
                 // In production, handle this gracefully

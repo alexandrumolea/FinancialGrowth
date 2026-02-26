@@ -59,6 +59,16 @@ class CalendarService {
         
         return event
     }
+    
+    func fetchEvents(from start: Date, to end: Date) -> [EKEvent] {
+        // Filter out Birthday and Subscription calendars to show only active personal/work events
+        let calendars = eventStore.calendars(for: .event).filter { calendar in
+            calendar.type != .birthday && calendar.type != .subscription
+        }
+        
+        let predicate = eventStore.predicateForEvents(withStart: start, end: end, calendars: calendars)
+        return eventStore.events(matching: predicate).sorted { $0.startDate < $1.startDate }
+    }
 }
 
 struct EKEventEditView: UIViewControllerRepresentable {

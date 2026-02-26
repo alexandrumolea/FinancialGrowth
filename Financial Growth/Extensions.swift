@@ -78,6 +78,13 @@ extension Date {
         formatter.timeStyle = .none
         return formatter.string(from: self)
     }
+    
+    var timeOnlyFormatted: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        return formatter.string(from: self)
+    }
 
     var roundedToNextHour: Date {
         let calendar = Calendar.current
