@@ -27,7 +27,7 @@ struct PersistenceController {
         // Sample activity
         let activity = Activity(context: ctx)
         activity.id = UUID()
-        activity.activityType = ActivityType.coaching.rawValue
+        activity.activityType = ActivityType.systemTypes[0].id
         activity.startDate = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
         activity.endDate = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
         activity.hours = 2.0
@@ -81,6 +81,29 @@ struct PersistenceController {
                 let nsError = error as NSError
                 print("CoreData save error: \(nsError), \(nsError.userInfo)")
             }
+        }
+    }
+
+    // MARK: - Profile Settings helper
+    func getOrCreateSettings(in context: NSManagedObjectContext) -> ProfileSettings {
+        let request: NSFetchRequest<ProfileSettings> = NSFetchRequest(entityName: "ProfileSettings")
+        do {
+            let results = try context.fetch(request)
+            if let settings = results.first {
+                return settings
+            } else {
+                let settings = ProfileSettings(context: context)
+                settings.id = UUID()
+                settings.weeklyHoursGoal = 40.0
+                settings.monthlyHoursGoal = 160.0
+                settings.customActivityTypesJSON = "[]"
+                try? context.save()
+                return settings
+            }
+        } catch {
+            let settings = ProfileSettings(context: context)
+            settings.id = UUID()
+            return settings
         }
     }
 }

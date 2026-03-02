@@ -19,7 +19,7 @@ struct AddEditActivityView: View {
     var initialDate: Date? = nil
 
     // MARK: - Form state
-    @State private var selectedType: ActivityType = .coaching
+    @State private var selectedType: ActivityType = ActivityType.systemTypes.first!
     @State private var selectedClient: Client?
     @State private var startDate = Date()
     @State private var endDate = Date()
@@ -31,6 +31,21 @@ struct AddEditActivityView: View {
     
     // Calendar integration
     @State private var eventToEdit: EventWrapper?
+    
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \ProfileSettings.id, ascending: true)],
+        animation: .default
+    )
+    private var settingsList: FetchedResults<ProfileSettings>
+    
+    private var allActivityTypes: [ActivityType] {
+        guard let json = settingsList.first?.customActivityTypesJSON,
+              let data = json.data(using: .utf8),
+              let custom = try? JSONDecoder().decode([ActivityType].self, from: data) else {
+            return ActivityType.systemTypes
+        }
+        return ActivityType.all(custom: custom)
+    }
 
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Client.name, ascending: true)],
@@ -57,7 +72,7 @@ struct AddEditActivityView: View {
                 // Activity type
                 Section("Tip activitate") {
                     Picker("Tip", selection: $selectedType) {
-                        ForEach(ActivityType.allCases) { type in
+                        ForEach(allActivityTypes) { type in
                             Label(type.displayName, systemImage: type.symbolName)
                                 .tag(type)
                         }
@@ -187,7 +202,7 @@ struct AddEditActivityView: View {
     // MARK: - Load existing
     private func loadExistingActivity() {
         if let act = activity {
-            selectedType = ActivityType(rawValue: act.activityType ?? "") ?? .coaching
+            selectedType = ActivityType.resolve(id: act.activityType, custom: allActivityTypes)
             selectedClient = act.client
             startDate = act.startDate ?? Date()
             endDate = act.endDate ?? Date()

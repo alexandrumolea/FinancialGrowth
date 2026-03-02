@@ -2,36 +2,53 @@
 //  ActivityType.swift
 //  Financial Growth
 //
-//  Created by Alexandru Molea on 19.02.2026.
-//
 
 import Foundation
+import SwiftUI
 
-enum ActivityType: String, CaseIterable, Identifiable {
-    case coaching = "Coaching"
-    case workshop = "Workshop"
-    case teamCoaching = "Team Coaching"
-    case others = "Altele"
+struct ActivityType: Identifiable, Hashable, Codable {
+    let id: String
+    let displayName: String
+    let symbolName: String
+    let colorName: String
 
-    var id: String { rawValue }
+    static let systemTypes: [ActivityType] = [
+        ActivityType(id: "Coaching", displayName: "Coaching", symbolName: "person.fill", colorName: "blue"),
+        ActivityType(id: "Workshop", displayName: "Workshop", symbolName: "person.3.fill", colorName: "purple"),
+        ActivityType(id: "Team Coaching", displayName: "Team Coaching", symbolName: "person.2.fill", colorName: "green"),
+        ActivityType(id: "Altele", displayName: "Altele", symbolName: "ellipsis.circle.fill", colorName: "orange")
+    ]
 
-    var displayName: String { rawValue }
-
-    var symbolName: String {
-        switch self {
-        case .coaching:    return "person.fill"
-        case .workshop:    return "person.3.fill"
-        case .teamCoaching: return "person.2.fill"
-        case .others:      return "ellipsis.circle.fill"
-        }
+    static func all(custom: [ActivityType] = []) -> [ActivityType] {
+        return systemTypes + custom
     }
 
-    var colorName: String {
-        switch self {
-        case .coaching:     return "blue"
-        case .workshop:     return "purple"
-        case .teamCoaching: return "green"
-        case .others:       return "orange"
+    init(id: String, displayName: String, symbolName: String, colorName: String) {
+        self.id = id
+        self.displayName = displayName
+        self.symbolName = symbolName
+        self.colorName = colorName
+    }
+    
+    // For backward compatibility with enum rawValue
+    init?(rawValue: String) {
+        if let system = ActivityType.systemTypes.first(where: { $0.id == rawValue }) {
+            self = system
+        } else {
+            // For custom types, we'd need more info, but for now we fallback to Altele if not found
+            // In a real app we might store these in a more robust way
+            self.id = rawValue
+            self.displayName = rawValue
+            self.symbolName = "tag.fill"
+            self.colorName = "blue"
         }
+    }
+    
+    var rawValue: String { id }
+
+    static func resolve(id: String?, custom: [ActivityType] = []) -> ActivityType {
+        guard let id = id else { return systemTypes.last! }
+        let allTypes = all(custom: custom)
+        return allTypes.first(where: { $0.id == id }) ?? ActivityType(rawValue: id) ?? systemTypes.last!
     }
 }

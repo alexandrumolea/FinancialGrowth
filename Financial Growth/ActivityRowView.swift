@@ -11,8 +11,23 @@ struct ActivityRowView: View {
 
     @ObservedObject var activity: Activity
 
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \ProfileSettings.id, ascending: true)],
+        animation: .default
+    )
+    private var settingsList: FetchedResults<ProfileSettings>
+    
+    private var customActivityTypes: [ActivityType] {
+        guard let json = settingsList.first?.customActivityTypesJSON,
+              let data = json.data(using: .utf8),
+              let types = try? JSONDecoder().decode([ActivityType].self, from: data) else {
+            return []
+        }
+        return types
+    }
+
     private var activityType: ActivityType {
-        ActivityType(rawValue: activity.activityType ?? "") ?? .others
+        ActivityType.resolve(id: activity.activityType, custom: customActivityTypes)
     }
 
     private var dateRangeText: String {

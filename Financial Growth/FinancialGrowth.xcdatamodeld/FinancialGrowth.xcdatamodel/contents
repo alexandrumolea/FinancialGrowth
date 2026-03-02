@@ -21,4 +21,10 @@
         <attribute name="phone" optional="YES" attributeType="String"/>
         <relationship name="activities" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Activity" inverseName="client" inverseEntity="Activity"/>
     </entity>
+    <entity name="ProfileSettings" representedClassName="ProfileSettings" syncable="YES" codeGenerationType="class">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="weeklyHoursGoal" attributeType="Double" defaultValueString="40.0" usesScalarValueType="YES"/>
+        <attribute name="monthlyHoursGoal" attributeType="Double" defaultValueString="160.0" usesScalarValueType="YES"/>
+        <attribute name="customActivityTypesJSON" attributeType="String" defaultValueString="[]"/>
+    </entity>
 </model>

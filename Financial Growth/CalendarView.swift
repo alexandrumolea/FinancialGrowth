@@ -23,6 +23,21 @@ struct CalendarView: View {
     @State private var showingAddActivity = false
     @State private var appleEvents: [EKEvent] = []
     
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \ProfileSettings.id, ascending: true)],
+        animation: .default
+    )
+    private var settingsList: FetchedResults<ProfileSettings>
+    
+    private var customActivityTypes: [ActivityType] {
+        guard let json = settingsList.first?.customActivityTypesJSON,
+              let data = json.data(using: .utf8),
+              let types = try? JSONDecoder().decode([ActivityType].self, from: data) else {
+            return []
+        }
+        return types
+    }
+    
     private let calendar: Calendar = {
         var cal = Calendar.current
         cal.firstWeekday = 2 // Monday (Standard in Romania)
@@ -333,7 +348,7 @@ struct CalendarView: View {
                     } label: {
                         HStack {
                             Capsule()
-                                .fill(ActivityType(rawValue: activity.activityType ?? "")?.color ?? .gray)
+                                .fill(ActivityType.resolve(id: activity.activityType, custom: customActivityTypes).color)
                                 .frame(width: 4)
                             
                             VStack(alignment: .leading, spacing: 4) {
@@ -471,8 +486,8 @@ struct CalendarView: View {
             return checkDate >= startOfDay && checkDate <= endOfDay
         }
         
-        let types = Set(dayActivities.compactMap { ActivityType(rawValue: $0.activityType ?? "") } )
-        return types.map { $0.color }
+        let types = Set(dayActivities.compactMap { $0.activityType })
+        return types.map { ActivityType.resolve(id: $0, custom: customActivityTypes).color }
     }
 }
 

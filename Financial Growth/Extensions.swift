@@ -101,11 +101,16 @@ extension Date {
 // MARK: - ActivityType Color
 extension ActivityType {
     var color: Color {
-        switch self {
-        case .coaching:     return .blue
-        case .workshop:     return .purple
-        case .teamCoaching: return Color(red: 0.2, green: 0.7, blue: 0.4)
-        case .others:       return .orange
+        switch colorName.lowercased() {
+        case "blue": return .blue
+        case "purple": return .purple
+        case "green": return Color(red: 0.2, green: 0.7, blue: 0.4)
+        case "orange": return .orange
+        case "red": return .red
+        case "pink": return .pink
+        case "teal": return .teal
+        case "indigo": return .indigo
+        default: return .blue
         }
     }
 }

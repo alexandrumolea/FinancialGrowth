@@ -38,6 +38,28 @@ struct ReportsView: View {
     @State private var customStart = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
     @State private var customEnd = Date()
     @State private var selectedInvoiceFilter: InvoiceFilter = .all
+    
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \ProfileSettings.id, ascending: true)],
+        animation: .default
+    )
+    private var settingsList: FetchedResults<ProfileSettings>
+    
+    private var settings: ProfileSettings? {
+        settingsList.first
+    }
+    
+    private var weeklyHoursGoal: Double { settings?.weeklyHoursGoal ?? 40.0 }
+    private var monthlyHoursGoal: Double { settings?.monthlyHoursGoal ?? 160.0 }
+    
+    private var allActivityTypes: [ActivityType] {
+        guard let json = settings?.customActivityTypesJSON,
+              let data = json.data(using: .utf8),
+              let custom = try? JSONDecoder().decode([ActivityType].self, from: data) else {
+            return ActivityType.systemTypes
+        }
+        return ActivityType.all(custom: custom)
+    }
 
     // MARK: - Filtered activities
     private var filteredActivities: [Activity] {
@@ -77,7 +99,7 @@ struct ReportsView: View {
     private var breakdown: [(type: ActivityType, total: Double, count: Int)] {
         var dict: [ActivityType: (Double, Int)] = [:]
         for act in filteredActivities {
-            let type = ActivityType(rawValue: act.activityType ?? "") ?? .others
+            let type = allActivityTypes.first(where: { $0.id == act.activityType }) ?? ActivityType(rawValue: act.activityType ?? "") ?? ActivityType.systemTypes.last!
             let existing = dict[type] ?? (0, 0)
             dict[type] = (existing.0 + act.totalAmount, existing.1 + 1)
         }
@@ -147,6 +169,52 @@ struct ReportsView: View {
                                        in: customStart..., displayedComponents: .date)
                                 .padding()
                         }
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .padding(.horizontal)
+                    }
+
+                    // Progress Section
+                    if selectedPeriod == .week || selectedPeriod == .month {
+                        let goal = selectedPeriod == .week ? weeklyHoursGoal : monthlyHoursGoal
+                        let progress = min(totalHours / goal, 1.0)
+                        let isGoalMet = totalHours >= goal
+                        
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Text(selectedPeriod == .week ? "Progres Săptămânal" : "Progres Lunar")
+                                    .font(.headline)
+                                Spacer()
+                                Text("\(Int(totalHours)) / \(Int(goal)) ore")
+                                    .font(.subheadline)
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(isGoalMet ? .green : .blue)
+                            }
+                            
+                            GeometryReader { geo in
+                                ZStack(alignment: .leading) {
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .fill(Color(.systemGray5))
+                                        .frame(height: 12)
+                                    
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .fill(isGoalMet ? Color.green.gradient : Color.blue.gradient)
+                                        .frame(width: geo.size.width * CGFloat(progress), height: 12)
+                                }
+                            }
+                            .frame(height: 12)
+                            
+                            if isGoalMet {
+                                Label("Obiectiv atins! Felicitări!", systemImage: "checkmark.seal.fill")
+                                    .font(.caption)
+                                    .foregroundStyle(.green)
+                            } else {
+                                Text("Mai ai \(Int(goal - totalHours)) ore până la obiectiv.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding()
                         .background(Color(.secondarySystemGroupedBackground))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .padding(.horizontal)
