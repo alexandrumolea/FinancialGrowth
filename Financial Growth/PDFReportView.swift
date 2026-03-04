@@ -11,6 +11,7 @@ struct PDFReportView: View {
     let periodLabel: String
     let activities: [Activity]
     let totalAmount: Double
+    let netAmount: Double
     let totalHours: Double
     
     // Pagination properties
@@ -41,8 +42,9 @@ struct PDFReportView: View {
                 Divider()
                 
                 // Summary
-                HStack(spacing: 40) {
+                HStack(spacing: 30) {
                     SummaryItem(title: "Total Încasat", value: totalAmount.currencyString, color: .green)
+                    SummaryItem(title: "Suma Netă", value: netAmount.currencyString, color: .teal)
                     SummaryItem(title: "Total Ore", value: totalHours.hoursString, color: .orange)
                     SummaryItem(title: "Sesiuni", value: "\(activities.count)", color: .blue)
                 }

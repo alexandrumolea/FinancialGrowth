@@ -27,6 +27,10 @@ struct ClientDetailView: View {
         sortedActivities.reduce(0) { $0 + $1.hours }
     }
     
+    private var netAmount: Double {
+        totalAmount * 0.66
+    }
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
@@ -63,9 +67,12 @@ struct ClientDetailView: View {
                 .padding(.vertical)
                 
                 // Metrics Cards
-                HStack(spacing: 16) {
-                    MetricCard(title: "Ore Totale", value: totalHours.hoursString, icon: "clock.fill", color: .orange)
-                    MetricCard(title: "Total Încasat", value: totalAmount.currencyString, icon: "eurosign.circle.fill", color: .green)
+                VStack(spacing: 16) {
+                    HStack(spacing: 16) {
+                        MetricCard(title: "Ore Totale", value: totalHours.hoursString, icon: "clock.fill", color: .orange)
+                        MetricCard(title: "Total Încasat", value: totalAmount.currencyString, icon: "eurosign.circle.fill", color: .green)
+                    }
+                    MetricCard(title: "Suma Netă (66%)", value: netAmount.currencyString, icon: "wallet.pass.fill", color: .teal)
                 }
                 .padding(.horizontal)
                 
@@ -174,6 +181,7 @@ struct ClientDetailView: View {
             periodLabel: label,
             activities: chunks.first ?? [],
             totalAmount: totalAmount,
+            netAmount: netAmount,
             totalHours: totalHours,
             pageNumber: 1,
             totalPages: totalPages,
@@ -199,6 +207,7 @@ struct ClientDetailView: View {
                         periodLabel: label,
                         activities: chunks[i],
                         totalAmount: totalAmount,
+                        netAmount: netAmount,
                         totalHours: totalHours,
                         pageNumber: i + 1,
                         totalPages: totalPages,

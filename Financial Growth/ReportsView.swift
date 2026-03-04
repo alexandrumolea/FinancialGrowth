@@ -87,6 +87,10 @@ struct ReportsView: View {
         filteredActivities.reduce(0) { $0 + $1.totalAmount }
     }
 
+    private var netAmount: Double {
+        totalAmount * 0.66
+    }
+
     private var totalHours: Double {
         filteredActivities.reduce(0) { $0 + $1.hours }
     }
@@ -239,6 +243,12 @@ struct ReportsView: View {
                             value: totalAmount.currencyString,
                             icon: "eurosign.circle.fill",
                             color: .green
+                        )
+                        ReportCardView(
+                            title: "Suma netă (66%)",
+                            value: netAmount.currencyString,
+                            icon: "wallet.pass.fill",
+                            color: .teal
                         )
                         ReportCardView(
                             title: "Sesiuni",
@@ -441,6 +451,7 @@ struct ReportsView: View {
             periodLabel: label,
             activities: chunks.first ?? [],
             totalAmount: totalAmount,
+            netAmount: netAmount,
             totalHours: totalHours,
             pageNumber: 1,
             totalPages: totalPages,
@@ -466,6 +477,7 @@ struct ReportsView: View {
                         periodLabel: label,
                         activities: chunks[i],
                         totalAmount: totalAmount,
+                        netAmount: netAmount,
                         totalHours: totalHours,
                         pageNumber: i + 1,
                         totalPages: totalPages,
