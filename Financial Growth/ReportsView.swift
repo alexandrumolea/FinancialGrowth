@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import Charts
 import UniformTypeIdentifiers
 
 enum ReportPeriod: String, CaseIterable, Identifiable {
@@ -97,6 +98,50 @@ struct ReportsView: View {
 
     private var averagePerHour: Double {
         totalHours == 0 ? 0 : totalAmount / totalHours
+    }
+
+    // MARK: - Chart data
+    /// Last 12 weeks of earnings across ALL activities (ignoring invoice filter)
+    private var weeklyChartData: [EarningsDataPoint] {
+        let cal = Calendar.current
+        let today = Date()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd.MM"
+        return (0..<12).reversed().compactMap { offset -> EarningsDataPoint? in
+            guard let weekAnchor = cal.date(byAdding: .weekOfYear, value: -offset, to: today),
+                  let start = cal.date(from: cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: weekAnchor)) else { return nil }
+            let end = cal.date(byAdding: .day, value: 6, to: start) ?? start
+            let total = allActivities
+                .filter { a in
+                    guard let d = a.startDate else { return false }
+                    return d >= start && d <= end.endOfDay
+                }
+                .reduce(0) { $0 + $1.totalAmount }
+            let label = formatter.string(from: start)
+            return EarningsDataPoint(label: label, date: start, amount: total)
+        }
+    }
+
+    /// Last 12 months of earnings across ALL activities (ignoring invoice filter)
+    private var monthlyChartData: [EarningsDataPoint] {
+        let cal = Calendar.current
+        let today = Date()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "LLLLL yy"
+        formatter.locale = Locale(identifier: "ro_RO")
+        return (0..<12).reversed().compactMap { offset -> EarningsDataPoint? in
+            guard let anchor = cal.date(byAdding: .month, value: -offset, to: today),
+                  let start = cal.date(from: cal.dateComponents([.year, .month], from: anchor)) else { return nil }
+            let end = start.endOfMonth
+            let total = allActivities
+                .filter { a in
+                    guard let d = a.startDate else { return false }
+                    return d >= start && d <= end
+                }
+                .reduce(0) { $0 + $1.totalAmount }
+            let label = formatter.string(from: start).capitalized
+            return EarningsDataPoint(label: label, date: start, amount: total)
+        }
     }
 
     // Summary by activity type
@@ -270,6 +315,13 @@ struct ReportsView: View {
                         )
                     }
                     .padding(.horizontal)
+
+                    // Earnings Evolution Chart
+                    if selectedPeriod == .week {
+                        EarningsChartView(dataPoints: weeklyChartData, period: .week)
+                    } else if selectedPeriod == .month {
+                        EarningsChartView(dataPoints: monthlyChartData, period: .month)
+                    }
 
                     // Breakdown by type
                     if !breakdown.isEmpty {

@@ -28,6 +28,7 @@
 		A002000000000032 /* PDFReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A002000000000031 /* PDFReportView.swift */; };
 		A002000000000034 /* ClientDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A002000000000033 /* ClientDetailView.swift */; };
 		A002000000000036 /* ReportExportHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A002000000000035 /* ReportExportHelper.swift */; };
+		A002000000000041 /* EarningsChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A002000000000042 /* EarningsChartView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -52,6 +53,7 @@
 		A002000000000031 /* PDFReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFReportView.swift; sourceTree = "<group>"; };
 		A002000000000033 /* ClientDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientDetailView.swift; sourceTree = "<group>"; };
 		A002000000000035 /* ReportExportHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportExportHelper.swift; sourceTree = "<group>"; };
+		A002000000000042 /* EarningsChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EarningsChartView.swift; sourceTree = "<group>"; };
 		C01C9D332F47004700A89D84 /* Financial Growth.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Financial Growth.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0B931832F475D810060FF50 /* Financial Growth.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Financial Growth.entitlements"; sourceTree = "<group>"; };
 		C0B931842F475F890060FF50 /* Financial-Growth-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Financial-Growth-Info.plist"; sourceTree = SOURCE_ROOT; };
@@ -108,6 +110,7 @@
 				A002000000000031 /* PDFReportView.swift */,
 				A002000000000033 /* ClientDetailView.swift */,
 				A002000000000035 /* ReportExportHelper.swift */,
+				A002000000000042 /* EarningsChartView.swift */,
 				A002000000000030 /* Assets.xcassets */,
 				A001000000000001 /* FinancialGrowth.xcdatamodeld */,
 			);
@@ -205,6 +208,7 @@
 				A002000000000032 /* PDFReportView.swift in Sources */,
 				A002000000000034 /* ClientDetailView.swift in Sources */,
 				A002000000000036 /* ReportExportHelper.swift in Sources */,
+				A002000000000041 /* EarningsChartView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
