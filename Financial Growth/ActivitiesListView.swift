@@ -18,7 +18,22 @@ struct ActivitiesListView: View {
     )
     private var activities: FetchedResults<Activity>
 
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \ProfileSettings.id, ascending: true)],
+        animation: .default
+    )
+    private var settingsList: FetchedResults<ProfileSettings>
+
     @State private var showingAddActivity = false
+
+    private var customActivityTypes: [ActivityType] {
+        guard let json = settingsList.first?.customActivityTypesJSON,
+              let data = json.data(using: .utf8),
+              let types = try? JSONDecoder().decode([ActivityType].self, from: data) else {
+            return []
+        }
+        return types
+    }
 
     var body: some View {
         NavigationStack {
@@ -27,14 +42,30 @@ struct ActivitiesListView: View {
                     emptyState
                 } else {
                     List {
-                        ForEach(activities) { activity in
-                            NavigationLink {
-                                AddEditActivityView(activity: activity)
-                            } label: {
-                                ActivityRowView(activity: activity)
-                            }
+                        // 2-week calendar grid inside a Header or first section
+                        Section {
+                            // Empty section body to allow header to spanning full width or just a wrapper
+                        } header: {
+                            TwoWeekGridView(
+                                activities: activities,
+                                customActivityTypes: customActivityTypes
+                            )
+                            .listRowInsets(EdgeInsets())
+                            .padding(.vertical, 8)
+                            .textCase(nil) // Disable default header capitalization
                         }
-                        .onDelete(perform: deleteActivities)
+                        .listRowBackground(Color.clear)
+
+                        Section("Toate activitățile") {
+                            ForEach(activities) { activity in
+                                NavigationLink {
+                                    AddEditActivityView(activity: activity)
+                                } label: {
+                                    ActivityRowView(activity: activity)
+                                }
+                            }
+                            .onDelete(perform: deleteActivities)
+                        }
                     }
                     .listStyle(.insetGrouped)
                 }
