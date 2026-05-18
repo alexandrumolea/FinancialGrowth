@@ -25,6 +25,7 @@
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="weeklyHoursGoal" attributeType="Double" defaultValueString="40.0" usesScalarValueType="YES"/>
         <attribute name="monthlyHoursGoal" attributeType="Double" defaultValueString="160.0" usesScalarValueType="YES"/>
+        <attribute name="dailyEarningsGoal" attributeType="Double" defaultValueString="300.0" usesScalarValueType="YES"/>
         <attribute name="customActivityTypesJSON" attributeType="String" defaultValueString="[]"/>
     </entity>
 </model>

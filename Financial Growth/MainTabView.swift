@@ -105,6 +105,26 @@ struct ProfileView: View {
                                     .fontWeight(.medium)
                             }
                         }
+
+                        HStack {
+                            Text("Obiectiv zilnic (€)")
+                            Spacer()
+                            Stepper(value: Binding(
+                                get: {
+                                    let current = settings.dailyEarningsGoalValue
+                                    let snapped = (current / 50.0).rounded() * 50.0
+                                    return min(max(snapped, 50), 10000)
+                                },
+                                set: { newValue in
+                                    let snapped = (newValue / 50.0).rounded() * 50.0
+                                    settings.dailyEarningsGoalValue = min(max(snapped, 50), 10000)
+                                    save()
+                                }
+                            ), in: 50...10000, step: 50) {
+                                Text("\(Int(min(max((settings.dailyEarningsGoalValue / 50.0).rounded() * 50.0, 50), 10000))) €")
+                                    .fontWeight(.medium)
+                            }
+                        }
                     }
                 } else {
                     Section {
@@ -202,7 +222,12 @@ struct ProfileView: View {
     }
     
     private func save() {
-        try? viewContext.save()
+        do {
+            try viewContext.save()
+        } catch {
+            let nsError = error as NSError
+            print("Profile save error: \(nsError), \(nsError.userInfo)")
+        }
     }
     
     private func colorFromName(_ name: String) -> Color {

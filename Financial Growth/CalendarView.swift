@@ -10,6 +10,12 @@ import CoreData
 import EventKit
 
 struct CalendarView: View {
+    private enum CalendarDisplayMode: String, CaseIterable, Identifiable {
+        case schedule = "Program"
+        case monthlyAmounts = "Sume/Lună"
+        var id: String { rawValue }
+    }
+
     @Environment(\.managedObjectContext) private var viewContext
     
     @FetchRequest(
@@ -20,6 +26,7 @@ struct CalendarView: View {
     
     @State private var selectedDate = Date().startOfDay
     @State private var currentMonth = Date().startOfMonth
+    @State private var displayMode: CalendarDisplayMode = .schedule
     @State private var showingAddActivity = false
     @State private var appleEvents: [EKEvent] = []
     
@@ -36,6 +43,10 @@ struct CalendarView: View {
             return []
         }
         return types
+    }
+
+    private var dailyEarningsGoal: Double {
+        settingsList.first?.dailyEarningsGoalValue ?? 300.0
     }
     
     private let calendar: Calendar = {
@@ -60,11 +71,22 @@ struct CalendarView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
+                    Picker("Mod afișare", selection: $displayMode) {
+                        ForEach(CalendarDisplayMode.allCases) { mode in
+                            Text(mode.rawValue).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal)
+
                     monthHeader
                     
-                    calendarGrid
-                    
-                    dayDetailSection
+                    if displayMode == .schedule {
+                        calendarGrid
+                        dayDetailSection
+                    } else {
+                        monthlyAmountGrid
+                    }
                 }
                 .padding(.vertical)
             }
@@ -161,6 +183,58 @@ struct CalendarView: View {
                                 Color.clear
                                     .frame(maxWidth: .infinity)
                                     .frame(height: 50)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding(.horizontal)
+    }
+
+    private var monthlyAmountGrid: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 0) {
+                ForEach(weekdayHeaders, id: \.self) { day in
+                    Text(day)
+                        .font(.caption2.bold())
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+
+            let daysInMonth = daysInCurrentMonth()
+            let firstDayOffset = firstWeekdayOffset()
+            let totalCells = daysInMonth + firstDayOffset
+            let rows = Int(ceil(Double(totalCells) / 7.0))
+
+            VStack(spacing: 0) {
+                ForEach(0..<rows, id: \.self) { row in
+                    HStack(spacing: 0) {
+                        ForEach(0..<7, id: \.self) { column in
+                            let index = row * 7 + column
+                            let dayValue = index - firstDayOffset + 1
+
+                            if dayValue >= 1 && dayValue <= daysInMonth {
+                                let date = dateForDay(dayValue)
+                                let amount = totalAmountForDay(date)
+                                MonthlyAmountDayView(
+                                    day: dayValue,
+                                    isToday: calendar.isDateInToday(date),
+                                    amount: amount,
+                                    isBelowGoal: amount < dailyEarningsGoal
+                                )
+                                .frame(maxWidth: .infinity)
+                                .onTapGesture {
+                                    selectedDate = date
+                                }
+                            } else {
+                                Color.clear
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 62)
                             }
                         }
                     }
@@ -489,6 +563,18 @@ struct CalendarView: View {
         let types = Set(dayActivities.compactMap { $0.activityType })
         return types.map { ActivityType.resolve(id: $0, custom: customActivityTypes).color }
     }
+
+    private func totalAmountForDay(_ date: Date) -> Double {
+        let checkDate = calendar.startOfDay(for: date)
+        return allActivities.reduce(0) { partial, activity in
+            guard let start = activity.startDate, let end = activity.endDate else { return partial }
+            let startOfDay = calendar.startOfDay(for: start)
+            let endOfDay = calendar.startOfDay(for: max(start, end))
+            guard checkDate >= startOfDay && checkDate <= endOfDay else { return partial }
+            return partial + activity.totalAmount
+        }
+    }
+
 }
 
 // MARK: - Supporting Views
@@ -531,6 +617,43 @@ struct DayView: View {
         }
         .frame(height: 44)
         .contentShape(Rectangle())
+    }
+}
+
+struct MonthlyAmountDayView: View {
+    let day: Int
+    let isToday: Bool
+    let amount: Double
+    let isBelowGoal: Bool
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text("\(day)")
+                .font(.system(size: 14, weight: isToday ? .bold : .medium))
+                .foregroundStyle(textColor)
+
+            if amount > 0 {
+                Text(amount.compactCurrencyString)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(isBelowGoal ? .orange : .green)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            } else {
+                Text("—")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .frame(height: 56)
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
+    }
+
+    private var textColor: Color {
+        if isToday {
+            return .accentColor
+        }
+        return .primary
     }
 }
 

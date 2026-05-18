@@ -54,6 +54,8 @@ struct PersistenceController {
             guard let description = container.persistentStoreDescriptions.first else {
                 fatalError("Failed to retrieve persistent store description.")
             }
+            description.shouldMigrateStoreAutomatically = true
+            description.shouldInferMappingModelAutomatically = true
             description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
             description.setOption(true as NSNumber,
                                   forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
@@ -96,6 +98,7 @@ struct PersistenceController {
                 settings.id = UUID()
                 settings.weeklyHoursGoal = 40.0
                 settings.monthlyHoursGoal = 160.0
+                settings.dailyEarningsGoalValue = 300.0
                 settings.customActivityTypesJSON = "[]"
                 try? context.save()
                 return settings

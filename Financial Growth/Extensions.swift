@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import CoreData
 
 // MARK: - Double formatting
 extension Double {
@@ -23,6 +24,25 @@ extension Double {
             return String(format: "%.0f ore", self)
         }
         return String(format: "%.1f ore", self)
+    }
+
+    var compactCurrencyString: String {
+        if self >= 1000 {
+            return String(format: "%.1fK €", self / 1000)
+        }
+        return String(format: "%.0f €", self)
+    }
+}
+
+extension ProfileSettings {
+    var dailyEarningsGoalValue: Double {
+        get {
+            let raw = value(forKey: "dailyEarningsGoal") as? Double ?? 300.0
+            return raw > 0 ? raw : 300.0
+        }
+        set {
+            setValue(newValue, forKey: "dailyEarningsGoal")
+        }
     }
 }
 
