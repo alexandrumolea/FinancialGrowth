@@ -25,6 +25,13 @@ struct ActivitiesListView: View {
     private var settingsList: FetchedResults<ProfileSettings>
 
     @State private var showingAddActivity = false
+    @State private var selectedFilter: ActivityFilter = .all
+
+    enum ActivityFilter: String, CaseIterable, Identifiable {
+        case all = "Toate"
+        case upcoming = "Urmează"
+        var id: String { self.rawValue }
+    }
 
     private var customActivityTypes: [ActivityType] {
         guard let json = settingsList.first?.customActivityTypesJSON,
@@ -35,6 +42,66 @@ struct ActivitiesListView: View {
         return types
     }
 
+    struct ActivityGroup: Identifiable {
+        let id: Date
+        let title: String
+        let activities: [Activity]
+    }
+
+    private var groupedActivities: [ActivityGroup] {
+        let now = Date()
+        
+        let filtered: [Activity]
+        let ascending: Bool
+        switch selectedFilter {
+        case .all:
+            filtered = Array(activities)
+            ascending = false
+        case .upcoming:
+            filtered = activities
+                .filter { ($0.startDate ?? Date()) >= Calendar.current.startOfDay(for: now) }
+                .sorted { ($0.startDate ?? Date()) < ($1.startDate ?? Date()) }
+            ascending = true
+        }
+        
+        var calendar = Calendar.current
+        calendar.firstWeekday = 2 // Luni
+        
+        let grouped = Dictionary(grouping: filtered) { activity -> Date in
+            let date = activity.startDate ?? Date()
+            let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
+            return calendar.date(from: components) ?? date
+        }
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "d MMM"
+        formatter.locale = Locale(identifier: "ro_RO")
+        
+        return grouped.map { (startOfWeek, acts) in
+            let endOfWeek = calendar.date(byAdding: .day, value: 6, to: startOfWeek) ?? startOfWeek
+            let startString = formatter.string(from: startOfWeek)
+            let endString = formatter.string(from: endOfWeek)
+            let title = "\(startString) - \(endString)"
+            
+            let sortedActs = acts.sorted { 
+                if ascending {
+                    return ($0.startDate ?? Date()) < ($1.startDate ?? Date())
+                } else {
+                    return ($0.startDate ?? Date()) > ($1.startDate ?? Date())
+                }
+            }
+            
+            return ActivityGroup(id: startOfWeek, title: title, activities: sortedActs)
+        }
+        .sorted {
+            if ascending {
+                return $0.id < $1.id
+            } else {
+                return $0.id > $1.id
+            }
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -42,29 +109,38 @@ struct ActivitiesListView: View {
                     emptyState
                 } else {
                     List {
-                        // 2-week calendar grid inside a Header or first section
                         Section {
-                            // Empty section body to allow header to spanning full width or just a wrapper
-                        } header: {
-                            TwoWeekGridView(
-                                activities: activities,
-                                customActivityTypes: customActivityTypes
-                            )
-                            .listRowInsets(EdgeInsets())
-                            .padding(.vertical, 8)
-                            .textCase(nil) // Disable default header capitalization
-                        }
-                        .listRowBackground(Color.clear)
-
-                        Section("Toate activitățile") {
-                            ForEach(activities) { activity in
-                                NavigationLink {
-                                    AddEditActivityView(activity: activity)
-                                } label: {
-                                    ActivityRowView(activity: activity)
+                            Picker("Filtru", selection: $selectedFilter) {
+                                ForEach(ActivityFilter.allCases) { filter in
+                                    Text(filter.rawValue).tag(filter)
                                 }
                             }
-                            .onDelete(perform: deleteActivities)
+                            .pickerStyle(.segmented)
+                            .padding(.vertical, 8)
+                        }
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets())
+
+                        if groupedActivities.isEmpty {
+                            Section {
+                                Text("Nicio activitate în această categorie")
+                                    .foregroundStyle(.secondary)
+                            }
+                        } else {
+                            ForEach(groupedActivities) { group in
+                                Section(header: Text(group.title)) {
+                                    ForEach(group.activities) { activity in
+                                        NavigationLink {
+                                            AddEditActivityView(activity: activity)
+                                        } label: {
+                                            ActivityRowView(activity: activity)
+                                        }
+                                    }
+                                    .onDelete { offsets in
+                                        deleteActivities(at: offsets, from: group)
+                                    }
+                                }
+                            }
                         }
                     }
                     .listStyle(.insetGrouped)
@@ -107,8 +183,11 @@ struct ActivitiesListView: View {
     }
 
     // MARK: - Delete
-    private func deleteActivities(at offsets: IndexSet) {
-        offsets.map { activities[$0] }.forEach(viewContext.delete)
+    private func deleteActivities(at offsets: IndexSet, from group: ActivityGroup) {
+        for index in offsets {
+            let activity = group.activities[index]
+            viewContext.delete(activity)
+        }
         PersistenceController.shared.save()
     }
 }

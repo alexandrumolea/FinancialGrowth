@@ -127,7 +127,7 @@ struct ReportsView: View {
         let cal = Calendar.current
         let today = Date()
         let formatter = DateFormatter()
-        formatter.dateFormat = "LLLLL yy"
+        formatter.dateFormat = "MM"
         formatter.locale = Locale(identifier: "ro_RO")
         return (0..<12).reversed().compactMap { offset -> EarningsDataPoint? in
             guard let anchor = cal.date(byAdding: .month, value: -offset, to: today),
